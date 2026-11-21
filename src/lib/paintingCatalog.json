@@ -1,0 +1,88 @@
+[
+  {
+    "id": "starry-night",
+    "artistId": "vincent",
+    "title": "星月夜",
+    "englishTitle": "The Starry Night",
+    "aliases": [
+      "星月夜",
+      "星夜",
+      "The Starry Night",
+      "Starry Night"
+    ],
+    "artist": "文森特·梵高",
+    "year": "1889",
+    "image": "/artworks/starry-night.jpg",
+    "museum": "纽约现代艺术博物馆（MoMA）",
+    "sourceUrl": "https://www.moma.org/collection/works/79802",
+    "imageSourceUrl": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+    "note": "1889年6月于圣雷米创作；不是1888年《罗讷河上的星夜》。",
+    "width": 1280,
+    "height": 1013
+  },
+  {
+    "id": "water-lilies",
+    "artistId": "monet",
+    "title": "睡莲",
+    "englishTitle": "Water Lilies",
+    "aliases": [
+      "睡莲",
+      "Water Lilies",
+      "Nymphéas",
+      "Nympheas"
+    ],
+    "artist": "克洛德·莫奈",
+    "year": "1906",
+    "image": "/artworks/water-lilies.jpg",
+    "museum": "芝加哥艺术博物馆",
+    "sourceUrl": "https://www.artic.edu/artworks/16568/water-lilies",
+    "imageSourceUrl": "https://commons.wikimedia.org/wiki/File:Claude_Monet_-_Water_Lilies_-_1933.1157_-_Art_Institute_of_Chicago.jpg",
+    "note": "《睡莲》是系列，当前展示馆藏1933.1157的1906年无桥版本，不是日本桥或橘园全景。",
+    "width": 3000,
+    "height": 2887
+  },
+  {
+    "id": "persistence-of-memory",
+    "artistId": "dali",
+    "title": "记忆的永恒",
+    "englishTitle": "The Persistence of Memory",
+    "aliases": [
+      "记忆的永恒",
+      "永恒的记忆",
+      "The Persistence of Memory",
+      "Persistence of Memory",
+      "达利的软钟",
+      "达利软钟"
+    ],
+    "artist": "萨尔瓦多·达利",
+    "year": "1931",
+    "image": "https://www.moma.org/media/W1siZiIsIjYxOTY1OSJdLFsicCIsImNvbnZlcnQiLCItcXVhbGl0eSA5MCAtcmVzaXplIDIwMDB4MjAwMFx1MDAzZSJdXQ.jpg?sha=ef9155183ab6bba1",
+    "museum": "纽约现代艺术博物馆（MoMA）",
+    "sourceUrl": "https://www.moma.org/collection/works/79018",
+    "imageSourceUrl": "https://www.moma.org/collection/works/79018",
+    "note": "馆藏162.1934，画中有软化的钟表与荒凉海岸；不要把通俗解读说成作者已证实的唯一动机。",
+    "width": 2000,
+    "height": 1446
+  },
+  {
+    "id": "blue-green-music",
+    "artistId": "georgia",
+    "title": "蓝与绿的音乐",
+    "englishTitle": "Blue and Green Music",
+    "aliases": [
+      "蓝与绿的音乐",
+      "蓝和绿的音乐",
+      "蓝色与绿色的音乐",
+      "Blue and Green Music"
+    ],
+    "artist": "乔治娅·欧姬芙",
+    "year": "1919–1921",
+    "image": "/artworks/georgia-blue-green-music.jpg",
+    "museum": "芝加哥艺术博物馆",
+    "sourceUrl": "https://www.artic.edu/artworks/24306/blue-and-green-music",
+    "imageSourceUrl": "https://commons.wikimedia.org/wiki/File:Blue_and_Green_Music_by_Georgia_O%27Keeffe,_1921.jpg",
+    "note": "馆藏1969.835；年代按欧姬芙博物馆官方目录采用1919–1921，蓝绿抽象形态，不是《红色美人蕉》。",
+    "width": 642,
+    "height": 768
+  }
+]

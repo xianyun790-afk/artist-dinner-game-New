@@ -1,0 +1,184 @@
+{
+  "dialogue": [
+    {
+      "artistId": "vincent",
+      "questions": [
+        "how would you paint a lamp",
+        "how would you paint this lamp"
+      ],
+      "text": "Put a stroke of blue beside the flame. See how warm the yellow looks?",
+      "audio": "/audio/en/vincent-lamp.mp3"
+    },
+    {
+      "artistId": "vincent",
+      "questions": [
+        "are you tired",
+        "want to take a break"
+      ],
+      "text": "My feet hurt. But look at that strip of light. Give me another minute.",
+      "audio": "/audio/en/vincent-rest.mp3"
+    },
+    {
+      "artistId": "dali",
+      "questions": [
+        "how would you paint a lamp",
+        "how would you paint this lamp"
+      ],
+      "text": "The lamp can stay where it is. I'd paint its shadow trying to escape.",
+      "audio": "/audio/en/dali-lamp.mp3"
+    },
+    {
+      "artistId": "dali",
+      "questions": [
+        "why hasn't the sphere fallen",
+        "why is that ball floating"
+      ],
+      "text": "Perhaps it's the floor that's falling. That would explain the gap.",
+      "audio": "/audio/en/dali-sphere.mp3"
+    },
+    {
+      "artistId": "georgia",
+      "questions": [
+        "hello",
+        "hi",
+        "nice to meet you"
+      ],
+      "text": "Pull up a chair. You get a good view from here.",
+      "audio": "/audio/en/georgia-hello.mp3"
+    },
+    {
+      "artistId": "georgia",
+      "questions": [
+        "shall we take a walk",
+        "would you like to go for a walk"
+      ],
+      "text": "Sure. I walk slowly. Stop me if you see something.",
+      "audio": "/audio/en/georgia-walk.mp3"
+    },
+    {
+      "artistId": "georgia",
+      "questions": [
+        "tell me about blue and green music",
+        "blue and green music"
+      ],
+      "text": "See where blue meets green? My eye follows that curve.",
+      "audio": "/audio/en/georgia-blue-green.mp3"
+    },
+    {
+      "artistId": "monet",
+      "questions": [
+        "what is the light like",
+        "what do you see in the light"
+      ],
+      "text": "There's silver on that edge. Wait a minute. The light will change.",
+      "audio": "/audio/en/monet-light.mp3"
+    }
+  ],
+  "exchanges": [
+    {
+      "topics": [
+        "starry night",
+        "the starry night",
+        "the night sky",
+        "stars"
+      ],
+      "lines": [
+        {
+          "artistId": "vincent",
+          "text": "That star needs more yellow, Salvador. Just a touch.",
+          "audio": "/audio/en/star-1.mp3"
+        },
+        {
+          "artistId": "dali",
+          "text": "The yellow is fine. It's that blue swirl. I'm getting seasick.",
+          "audio": "/audio/en/star-2.mp3"
+        },
+        {
+          "artistId": "vincent",
+          "text": "Seasick? Look at the lit window. The village is still.",
+          "audio": "/audio/en/star-3.mp3"
+        },
+        {
+          "artistId": "dali",
+          "text": "Good. When the sky comes round, I'll get off there.",
+          "audio": "/audio/en/star-4.mp3"
+        }
+      ]
+    },
+    {
+      "topics": [
+        "the persistence of memory",
+        "persistence of memory",
+        "soft watches",
+        "melting clocks"
+      ],
+      "lines": [
+        {
+          "artistId": "dali",
+          "text": "Vincent, I have a small problem. Where does one hang a watch this soft?",
+          "audio": "/audio/en/watch-1.mp3"
+        },
+        {
+          "artistId": "vincent",
+          "text": "On my easel. The sun tells me when to stop.",
+          "audio": "/audio/en/watch-2.mp3"
+        },
+        {
+          "artistId": "dali",
+          "text": "And on a cloudy day? Does the sun send you a note?",
+          "audio": "/audio/en/watch-3.mp3"
+        },
+        {
+          "artistId": "vincent",
+          "text": "If I can see the canvas, there's still time.",
+          "audio": "/audio/en/watch-4.mp3"
+        }
+      ]
+    }
+  ],
+  "paintings": {
+    "starry-night": [
+      {
+        "artistId": "vincent",
+        "text": "See that cypress on the left? My eye climbs it, right up into the blue.",
+        "audio": "/audio/en/cypress.mp3"
+      },
+      {
+        "artistId": "vincent",
+        "text": "Follow the blue down to the village. A few windows are still lit.",
+        "audio": "/audio/en/village.mp3"
+      }
+    ],
+    "persistence-of-memory": [
+      {
+        "artistId": "dali",
+        "text": "There's my watch. I hung it up like a coat.",
+        "audio": "/audio/en/branch.mp3"
+      },
+      {
+        "artistId": "dali",
+        "text": "Late for dinner? Take my watch. Nobody can read it anyway.",
+        "audio": "/audio/en/late.mp3"
+      }
+    ],
+    "water-lilies": [
+      {
+        "artistId": "monet",
+        "text": "Look at the light between the leaves. The pond holds a piece of the sky.",
+        "audio": "/audio/en/water-lilies.mp3"
+      }
+    ],
+    "blue-green-music": [
+      {
+        "artistId": "georgia",
+        "text": "Follow the curve where blue meets green. See how it carries your eye upward?",
+        "audio": "/audio/en/blue-green-music.mp3"
+      }
+    ]
+  },
+  "rest": {
+    "artistId": "vincent",
+    "text": "Time to rest my legs.",
+    "audio": "/audio/en/vincent-tired.mp3"
+  }
+}

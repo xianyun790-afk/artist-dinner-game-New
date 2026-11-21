@@ -1,0 +1,44 @@
+[
+  {
+    "artistId": "vincent", "artistName": "梵高",
+    "questions": ["你会怎么画一盏灯", "你会怎么画同一盏灯", "你会怎么画这盏灯", "这盏灯你会怎么画"],
+    "text": "我会先画灯旁边那块蓝。蓝够深了，一点黄就会亮起来。",
+    "audio": "/audio/dialogue/vincent-lamp.mp3"
+  },
+  {
+    "artistId": "vincent", "artistName": "梵高",
+    "questions": ["你累了吗", "要休息一下吗", "要不要歇一会儿", "累了吧", "你是不是累了"],
+    "text": "嗯，小腿有点酸。你陪我站一会儿吧，我还想看看那边的光。",
+    "audio": "/audio/dialogue/vincent-rest.mp3"
+  },
+  {
+    "artistId": "dali", "artistName": "达利",
+    "questions": ["你会怎么画一盏灯", "你会怎么画同一盏灯", "你会怎么画这盏灯", "这盏灯你会怎么画"],
+    "text": "我会给灯罩画一只耳朵。夜里大家都睡了，总得有人听见那些梦。",
+    "audio": "/audio/dialogue/dali-lamp.mp3"
+  },
+  {
+    "artistId": "dali", "artistName": "达利",
+    "questions": ["那颗球为什么没掉下来", "那颗球为什么不掉下来", "那个球为什么没掉下来", "那颗球为什么没有掉下来", "球怎么浮在空中"],
+    "text": "也许它已经掉下来了。只是这里的天空太高，它还没来得及告诉地面。",
+    "audio": "/audio/dialogue/dali-sphere.mp3"
+  },
+  {
+    "artistId": "georgia", "artistName": "欧姬芙",
+    "questions": ["你好", "初次见面", "在吗"],
+    "text": "你好。我喜欢你挑的这个位置，安静，说话也听得清。",
+    "audio": "/audio/dialogue/georgia-hello.mp3"
+  },
+  {
+    "artistId": "georgia", "artistName": "欧姬芙",
+    "questions": ["要不要出去走走", "想去散步吗", "一起散步吗"],
+    "text": "想。我喜欢慢慢走。你要是看见什么有意思的，我们就停一会儿。",
+    "audio": "/audio/dialogue/georgia-walk.mp3"
+  },
+  {
+    "artistId": "georgia", "artistName": "欧姬芙",
+    "questions": ["聊聊蓝与绿的音乐", "你怎么看蓝与绿的音乐", "蓝与绿的音乐"],
+    "text": "你看蓝和绿碰到的地方。我的目光到了那儿，就会顺着弧线再走一段。",
+    "audio": "/audio/dialogue/georgia-blue-green.mp3"
+  }
+]

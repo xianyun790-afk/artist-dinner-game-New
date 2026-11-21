@@ -1,0 +1,14 @@
+import { gameAsset } from '@/lib/gameAssets';
+import { useState } from 'react';
+import { Check, Plus, Volume2, ArrowLeft, ArrowRight } from 'lucide-react';
+import type { Artist, Save } from '@/lib/types';
+import { ArtistCreator } from './ArtistCreator';
+export function GuestBook({ catalog, save, onToggle, onReorder, onCreate, onPreview, onClose, onVoiceSettings, initialCreating=false }: { catalog:Artist[];save:Save;onToggle:(id:string)=>void;onReorder:(id:string,dir:number)=>void;onCreate:(a:Artist)=>void;onPreview:(a:Artist)=>void;onClose:()=>void;onVoiceSettings:()=>void;initialCreating?:boolean }) {
+  const [creating,setCreating]=useState(initialCreating);
+  return <><div className="guestbook-toolbar"><p>把你喜欢的人请到桌边。<span>已邀请 {save.invited.length}/5 位 · 拖动顺序可用下方箭头调整</span></p><button className="button secondary" onClick={()=>setCreating(!creating)}><Plus size={15}/>{creating?'返回来宾名单':'创建我的艺术家'}</button></div>
+  {creating?<ArtistCreator onCreate={a=>{onCreate(a);setCreating(false);}} onPreview={onPreview}/>:<div className="guest-grid">{catalog.map(a=>{
+    const selected=save.invited.includes(a.id);const idx=save.invited.indexOf(a.id);
+    return <article className={`guest-card ${selected?'invited':''}`} key={a.id}><div className="guest-portrait" style={{background:a.color+'18'}}><span className="artist-type">{a.custom?(a.identityType==='historical'?'自定义 · AI 演绎':'原创人设'):'AI 演绎'}</span><img src={gameAsset(a.image)} alt={a.name}/><button className="portrait-preview" onClick={()=>onPreview(a)} aria-label={`试听${a.name}`}><Volume2 size={16}/></button></div><div className="guest-card-body"><span className="eyebrow">{a.english}</span><h3>{a.name}</h3><p className="artist-medium">{a.medium}</p><p className="artist-bio">{a.bio}</p>{a.referenceImage&&<details className="guest-reference"><summary>上传参考 · 桌边暂用示例形象</summary><img src={a.referenceImage} alt={`${a.name}的上传参考`}/></details>}{a.custom&&<details className="guest-reference"><summary>人设与资料</summary><p>{a.personality}</p><p>{a.sourceNotes||'没有额外上传资料。'}</p><small>本地档案 · 上传资料尚未核验</small></details>}<div className="guest-card-bottom"><button className={`invite-button ${selected?'selected':''}`} onClick={()=>onToggle(a.id)}>{selected?<Check size={14}/>:<Plus size={14}/>} {selected?'已在席':'邀请入席'}</button>{selected&&<span className="seat-controls"><button disabled={idx===0} aria-label={`将${a.name}座位前移`} onClick={()=>onReorder(a.id,-1)}><ArrowLeft size={13}/></button><small>{idx+1}</small><button disabled={idx===save.invited.length-1} aria-label={`将${a.name}座位后移`} onClick={()=>onReorder(a.id,1)}><ArrowRight size={13}/></button></span>}</div></div></article>;
+  })}</div>}
+  <div className="modal-bottom"><button className="text-btn" onClick={onVoiceSettings}><Volume2 size={14}/>设置来宾声音</button><button className="button" onClick={onClose}>回到晚宴 <ArrowRight size={15}/></button></div></>;
+}
