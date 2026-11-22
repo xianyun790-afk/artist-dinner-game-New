@@ -33,6 +33,7 @@ type StandingSceneProps = {
   speaking: boolean;
   responding: boolean;
   ambientAllowed: boolean;
+  covered: boolean;
   onRestLowered: () => void;
   onSelect: (id: string) => void;
   onEntranceComplete?: () => void;
@@ -161,14 +162,14 @@ function desiredAction(actor: Actor, id: string, active: boolean) {
   return '';
 }
 
-export function StandingScene({ guests, talkingPair, crouchRequest, reply, selectedId, speaking, responding, ambientAllowed, onRestLowered, onSelect, onEntranceComplete }: StandingSceneProps) {
+export function StandingScene({ guests, talkingPair, crouchRequest, reply, selectedId, speaking, responding, ambientAllowed, covered, onRestLowered, onSelect, onEntranceComplete }: StandingSceneProps) {
   const host = useRef<HTMLDivElement>(null);
   const bubble = useRef<HTMLDivElement>(null);
   const activeId = reply?.artistId;
   const speaker = guests.find(guest => guest.id === activeId);
   const hitTargets = useRef<Record<string, HTMLButtonElement | null>>({});
-  const live = useRef({ activeId, talkingPair, speaking, responding, ambientAllowed, onRestLowered });
-  live.current = { activeId, talkingPair, speaking, responding, ambientAllowed, onRestLowered };
+  const live = useRef({ activeId, talkingPair, speaking, responding, ambientAllowed, covered, onRestLowered });
+  live.current = { activeId, talkingPair, speaking, responding, ambientAllowed, covered, onRestLowered };
   const restTimer = useRef<ReturnType<typeof restClock> | undefined>(undefined);
   const entranceComplete = useRef(onEntranceComplete);
   entranceComplete.current = onEntranceComplete;
@@ -474,6 +475,7 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
     const animate = () => {
       if (dead) return;
       frame = requestAnimationFrame(animate);
+      if (live.current.covered) return;
       const now = performance.now();
       updateRoster(now);
       if (cameraMove) {

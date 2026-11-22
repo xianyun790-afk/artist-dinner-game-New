@@ -116,11 +116,41 @@ html,body,#root{width:100%;height:100%;background:#fff}
   pointer-events: auto;
 }
 @keyframes standing-bubble-appear { from { opacity: 0; } to { opacity: 1; } }
-.standing-stage .room-input-wrap{bottom:5.6%}
-.standing-stage .heard-line{color:#85827a;text-shadow:0 1px 8px #fff}
+.standing-stage .room-input-wrap { display: contents; }
+.standing-stage :is(.room-voice, .room-type) {
+  position: absolute;
+  inset-inline: 0;
+  bottom: max(5.6%, env(safe-area-inset-bottom));
+  width: min(540px, calc(100% - 36px));
+  margin-inline: auto;
+  z-index: 10;
+}
+.standing-stage .heard-line {
+  position: absolute;
+  top: max(78px, calc(env(safe-area-inset-top) + 64px));
+  inset-inline: 0;
+  width: fit-content;
+  max-width: min(500px, calc(100% - 32px));
+  min-height: 0;
+  max-height: min(7lh, 30dvh);
+  margin: 0 auto;
+  z-index: 10;
+  color: #57544d;
+  text-align: center;
+  overflow-wrap: anywhere;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.standing-stage .heard-line:not(:empty) {
+  padding: 8px 14px;
+  border: 1px solid #e6e3dc;
+  border-radius: 14px;
+  background: #fffffff2;
+  box-shadow: 0 4px 20px #27272012;
+}
 .standing-stage .speak-button{border-color:#d9d8d2;background:#ffffffe6;color:#4d4b46;box-shadow:0 10px 30px #2727200b;backdrop-filter:blur(12px)}
 .standing-stage .room-keyboard{color:#6f6c65}
-@media(max-width:760px){.standing-add{right:16px;top:16px}.standing-guest-panel{right:16px;top:68px;width:min(260px,calc(100% - 32px))}.standing-artist-hit{width:42vw;height:55vh}.standing-scene .standing-bubble{max-width:min(250px,calc(100% - 24px))}.standing-stage .room-input-wrap{bottom:max(4%,env(safe-area-inset-bottom))}.standing-intro-line{bottom:12%}}
+@media(max-width:760px){.standing-add{right:16px;top:16px}.standing-guest-panel{right:16px;top:68px;width:min(260px,calc(100% - 32px))}.standing-artist-hit{width:42vw;height:55vh}.standing-scene .standing-bubble{max-width:min(250px,calc(100% - 24px))}.standing-stage :is(.room-voice,.room-type){bottom:max(4%,env(safe-area-inset-bottom))}.standing-stage .heard-line{top:max(66px,calc(env(safe-area-inset-top) + 56px))}.standing-intro-line{bottom:12%}}
 @media(max-width:760px){
   .fullscreen-dinner .quiet-chat{height:min(40dvh,390px)}
   .keyword-popup{bottom:calc(min(40dvh,390px) + 22px)}

@@ -1,0 +1,217 @@
+.cafe-page { background: #121619; }
+.cafe-page body { margin: 0; }
+.cafe-page:has(.cafe-app[data-rotated="true"]) { overflow: hidden; }
+
+.cafe-visit {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: #121619;
+  overflow: hidden;
+}
+
+.cafe-app {
+  position: relative;
+  height: 100dvh;
+  isolation: isolate;
+  overflow: hidden;
+  font-family: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  color: #f6efdc;
+  background: #121619;
+  color-scheme: dark;
+  font-synthesis: none;
+  --cafe-safe-top: env(safe-area-inset-top, 0px);
+  --cafe-safe-right: env(safe-area-inset-right, 0px);
+  --cafe-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --cafe-safe-left: env(safe-area-inset-left, 0px);
+  --cafe-edge: clamp(14px, 3.1vw, 56px);
+}
+
+.cafe-app, .cafe-app * { box-sizing: border-box; }
+.cafe-app :is(button, a, canvas):focus-visible {
+  outline: 2px solid #ffe6a9;
+  outline-offset: 4px;
+}
+.cafe-app canvas:focus-visible { outline-offset: -4px; }
+
+/* Swap the layout dimensions so the camera renders a real landscape view. */
+.cafe-app[data-rotated="true"] {
+  position: fixed;
+  top: 0;
+  left: 100dvw;
+  width: 100dvh;
+  height: 100dvw;
+  transform: rotate(90deg);
+  transform-origin: top left;
+  --cafe-safe-top: env(safe-area-inset-right, 0px);
+  --cafe-safe-right: env(safe-area-inset-bottom, 0px);
+  --cafe-safe-bottom: env(safe-area-inset-left, 0px);
+  --cafe-safe-left: env(safe-area-inset-top, 0px);
+}
+
+.cafe-stage, .cafe-poster, .cafe-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.cafe-poster {
+  object-fit: cover;
+  object-position: center 58%;
+}
+.cafe-canvas {
+  opacity: 0;
+  transition: opacity 350ms;
+  cursor: grab;
+  touch-action: none;
+}
+.cafe-stage[data-phase="ready"] .cafe-canvas { opacity: 1; }
+.cafe-stage[data-phase="ready"] .cafe-poster { visibility: hidden; }
+.cafe-canvas.is-dragging { cursor: grabbing; }
+
+.cafe-guides {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+button.cafe-guide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  visibility: hidden;
+  cursor: pointer;
+  touch-action: manipulation;
+  color: #ffdc83;
+  opacity: .73;
+}
+.cafe-guide[data-visible] { visibility: visible; pointer-events: auto; }
+.cafe-guide[data-next] { z-index: 1; opacity: 1; }
+.cafe-guide::before, .cafe-guide::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.cafe-guide::before {
+  width: 24px;
+  height: 24px;
+  border: 1px solid currentColor;
+  box-shadow: 0 0 14px #ffc84999, inset 0 0 10px #ffc84940;
+  opacity: .56;
+}
+.cafe-guide::after {
+  width: 8px;
+  height: 8px;
+  background: #fff7cc;
+  box-shadow: 0 0 8px 2px #ffc449d9, 0 0 20px 3px #ffaa3666;
+}
+.cafe-guide[data-next]::before { animation: cafe-guide-pulse 2.4s ease-out infinite; }
+.cafe-guide:is(:hover, :focus-visible) { opacity: 1; }
+.cafe-guide:is(:hover, :focus-visible)::after { background: #fffdf2; }
+@keyframes cafe-guide-pulse {
+  0% { transform: translate(-50%, -50%) scale(.67); opacity: .91; }
+  80%, 100% { transform: translate(-50%, -50%) scale(1.45); opacity: 0; }
+}
+
+.cafe-header, .cafe-controls {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  inset-inline: 0;
+  padding-left: max(var(--cafe-edge), calc(var(--cafe-safe-left) + 8px));
+  padding-right: max(var(--cafe-edge), calc(var(--cafe-safe-right) + 8px));
+  pointer-events: none;
+}
+.cafe-header > *, .cafe-controls > * { pointer-events: auto; }
+.cafe-header {
+  top: 0;
+  padding-block: max(10px, var(--cafe-safe-top)) 12px;
+  background: linear-gradient(#060d207d, transparent);
+}
+.cafe-controls {
+  bottom: 0;
+  justify-content: flex-end;
+  padding-block: 12px max(12px, var(--cafe-safe-bottom));
+}
+.cafe-home {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 10px;
+  border: 0;
+  padding: 0;
+  color: #f6efdc;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  text-decoration: none;
+  text-shadow: 0 1px 8px #060d20;
+  cursor: pointer;
+}
+.cafe-home span {
+  font: 600 22px/1 'Songti SC', 'Noto Serif CJK SC', SimSun, serif;
+  letter-spacing: .17em;
+}
+
+.cafe-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #fff5d346;
+  border-radius: 4px;
+  background: #111728d9;
+  color: #eee6d5;
+  backdrop-filter: blur(12px);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.cafe-lamp {
+  min-width: 95px;
+  border-radius: 999px;
+}
+.cafe-lamp[aria-pressed="true"] {
+  border-color: #fae2a685;
+  background: #684418e6;
+  color: #ffedba;
+}
+
+.cafe-status {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100% - 28px);
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 4px;
+  transform: translate(-50%, -50%);
+  background: #111728ed;
+  font-size: 14px;
+}
+.cafe-status p { margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cafe-canvas { transition: none; }
+  .cafe-guide[data-next]::before { animation: none; }
+}

@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {artists} from '../src/lib/artists.ts';
 import {responderFor,roomReply} from '../src/lib/room.ts';
+import {requestsLifeVisit} from '../src/lib/conversationIntent.ts';
 const guests=artists.slice(0,4);
 test('anyone can speak at the table without first selecting an artist',()=>{
   assert.equal(responderFor('今天好累',guests,null,null)?.id,'georgia');
@@ -15,7 +16,16 @@ test('anyone can speak at the table without first selecting an artist',()=>{
 });
 test('calling a name overrides topic and a selected seat',()=>{
   assert.equal(responderFor('梵高，你怎么看日落',guests,'monet','dali')?.id,'vincent');
+  assert.equal(responderFor('梵高我想走入你的生活场景',guests,'dali',null)?.id,'vincent');
   assert.equal(responderFor('欧姬芙，你会做梦吗',guests,null,null)?.id,'georgia');
+});
+test('direct invitations to visit can open the café without a painting title',()=>{
+  for (const text of ['我想走入你的生活场景','梵高：带我去你生活过的地方看看','我想体验一下你的日常生活','去夜间露天咖啡座', "I'd love to step into your world", 'Could you take me to the places where you lived?']) {
+    assert.equal(requestsLifeVisit(text),true,text);
+  }
+  for (const text of ['聊聊你的生活场景','我不想走进你的生活场景','我想走入你的生活场景，还是先别去了','电影里的角色说，我想走入你的生活场景','台词是「我想走进你的生活场景」', "She said, 'I'd like to see your daily life.'", "I don't want to visit your home.", 'Show me The Starry Night']) {
+    assert.equal(requestsLifeVisit(text),false,text);
+  }
 });
 test('a chosen guest stays in the conversation and an unnamed follow-up has context',()=>{
   assert.equal(responderFor('颜色呢',guests,'monet',null)?.id,'monet');

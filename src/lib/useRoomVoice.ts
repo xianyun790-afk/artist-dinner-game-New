@@ -59,7 +59,7 @@ export function useRoomVoice(onText: (text: string) => void, blocked: boolean, o
     recognition.onerror = event => {
       if (!active() || ['no-speech', 'aborted'].includes(event.error)) return;
       failed = true; intent.current = false; setEnabled(false); stopCurrent();
-      setError(event.error === 'not-allowed' ? t("麦克风或语音识别没有获准，请在浏览器网站设置中允许后重试。", "Allow microphone access in your browser settings and try again.")
+      setError(event.error === 'not-allowed' ? t("请在浏览器设置中允许使用麦克风，然后重试。", "Enable microphone access in your browser settings, then try again.")
         : event.error === 'audio-capture' ? t("没有找到麦克风，可以先打字聊天。", "No microphone found. You can type instead.")
           : event.error === 'service-not-allowed' ? t("浏览器没有允许语音识别，可以换 Safari／Chrome 或先打字。", "Speech recognition is unavailable. Try another browser or type a message.")
             : event.error === 'language-not-supported' ? t("浏览器识别服务暂不支持中文，可以先打字聊天。", "English speech recognition is unavailable. You can type instead.")

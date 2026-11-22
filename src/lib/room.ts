@@ -18,7 +18,7 @@ export function directlyAddressedArtists(text:string,guests:Artist[]):Artist[]{
   const prefix='(?:(?:我想问问|我想问|我想请|能不能请|我想找|我想和|我想跟|请问|问问|想问|想请|想和|想跟|请|让|我问|我找|找|嗨|嘿|你好)[，,\\s]*)?';
   // A name must be used as an address, alone or followed by a request. Merely
   // mentioning somebody's work or asking about them must not change seats.
-  const pattern=new RegExp(`(?:^|[，,。！？!?；;\\n])\\s*${prefix}(${nameList})\\s*(?=[，,：:！!？?。；;\\n]|$|你|您|来|请|说说|聊聊|谈谈|帮我|能|可|想吃|想喝|想聊|想不想|愿不愿意|会|怎么|觉得|认为|要不要|先说|再说)`,'giu');
+  const pattern=new RegExp(`(?:^|[，,。！？!?；;\\n])\\s*${prefix}(${nameList})\\s*(?=[，,：:！!？?。；;\\n]|$|你|您|我想|我能|我可以|来|请|说说|聊聊|谈谈|帮我|能|可|想吃|想喝|想聊|想不想|愿不愿意|会|怎么|觉得|认为|要不要|先说|再说)`,'giu');
   const clean=unquotedConversationText(text),found=new Set<string>(),result:Artist[]=[];
   for(const match of clean.matchAll(pattern)){
     const address=match[1].toLowerCase();

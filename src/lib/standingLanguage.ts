@@ -3,7 +3,10 @@ import type { Artist } from './types';
 export type Language = 'zh' | 'en';
 const query = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
 export const standingVersion = query.get('version') !== 'dinner';
-export let language: Language = standingVersion && query.get('lang') === 'en' ? 'en' : 'zh';
+export function standingLocale(params: URLSearchParams): Language {
+  return params.get('lang') === 'zh' ? 'zh' : 'en';
+}
+export let language: Language = typeof location !== 'undefined' && standingVersion ? standingLocale(query) : 'zh';
 export let english = language === 'en';
 export function setStandingLanguage(next: Language) {
   language = next;

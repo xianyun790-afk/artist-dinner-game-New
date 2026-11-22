@@ -11,10 +11,11 @@ import { loadSave, writeSave } from '@/lib/storage';
 import { uid } from '@/lib/engine';
 import { crouchTargets, defaultStandingGuests, standingModels, tiredAside as chineseAside } from '@/lib/standingGuests';
 import scripts from '@/lib/standingEnglish.json';
-import { displayName, english, englishAddress, language, setStandingLanguage, t, type Language } from '@/lib/standingLanguage';
+import { displayName, english, englishAddress, language, setStandingLanguage, standingLocale, t, type Language } from '@/lib/standingLanguage';
 import { deriveArtistExpression } from '@/lib/artistExpression';
 import { useDialogue } from '@/lib/useDialogue';
-import { responderFor, roomReply, everydayFallback } from '@/lib/room';
+import { directlyAddressedArtists, responderFor, roomReply, everydayFallback } from '@/lib/room';
+import { requestsLifeVisit } from '@/lib/conversationIntent';
 import { useSpeech } from '@/lib/useSpeech';
 import type { DialogueLine } from '@/lib/dialogueService';
 import type { Artist } from '@/lib/types';
@@ -24,6 +25,7 @@ import { StandingScene } from '@/components/StandingScene';
 import { PaintingMemories } from '@/components/PaintingMemories';
 import { Modal } from '@/components/ui/Modal';
 import type { ArtistReply } from '@/components/ArtistBubble';
+import { CafeVisit } from './cafe/CafeVisit';
 
 const englishAside = { ...scripts.rest, recordingUrl: scripts.rest.audio };
 const guestTags: Record<string, string> = { vincent: 'Colour and brushwork', dali: 'Dreams and the unexpected', monet: 'Light and reflections', georgia: 'Colour and form' };
@@ -39,7 +41,7 @@ export default function StandingDuoApp() {
     setLocale(next);
   }, []);
   useEffect(() => {
-    const restore = () => applyLocale(new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'zh');
+    const restore = () => applyLocale(standingLocale(new URLSearchParams(location.search)));
     window.addEventListener('popstate', restore);
     return () => window.removeEventListener('popstate', restore);
   }, [applyLocale]);
@@ -58,6 +60,7 @@ export default function StandingDuoApp() {
   const [guestPanel, setGuestPanel] = useState(false);
   const [memoryPanel, setMemoryPanel] = useState(false);
   const closeMemories = useCallback(() => setMemoryPanel(false), []);
+  const [cafeOpen, setCafeOpen] = useState(false);
   const [talkingPair, setTalkingPair] = useState<readonly string[] | null>(null);
   const [roomNotice, setRoomNotice] = useState('');
   const exchangeIndex = useRef(0);
@@ -134,7 +137,7 @@ export default function StandingDuoApp() {
     };
   }, [clearAside, stop]);
 
-  const ambientAllowed = arrived && !painting && !memoryPanel && !talkingPair && !guestPanel && !pending && !speech.speaking && !speech.loading && !composing && !aside;
+  const ambientAllowed = arrived && !painting && !cafeOpen && !memoryPanel && !talkingPair && !guestPanel && !pending && !speech.speaking && !speech.loading && !composing && !aside;
   const sayTired = () => {
     const tiredAside = locale === 'en' ? englishAside : chineseAside;
     const artist = guests.find(guest => guest.id === tiredAside.artistId);
@@ -203,13 +206,24 @@ export default function StandingDuoApp() {
 
   const send = (raw: string) => {
     const text = raw.trim();
-    if (!text || pending || !arrived || guestPanel || painting || memoryPanel) return;
+    if (!text || pending || !arrived || guestPanel || painting || cafeOpen || memoryPanel) return;
     setRoomNotice('');
     const duo = parseDuoRequest(text);
     if (duo) { startDuo(duo.topic, duo.named); return; }
+    const namedInEnglish = englishAddress(text);
+    if (requestsLifeVisit(namedInEnglish?.rest ?? text)) {
+      const recipient = namedInEnglish?.id ?? directlyAddressedArtists(text, artists)[0]?.id
+        ?? selectedId ?? previousSpeaker.current ?? 'vincent';
+      if (recipient === 'vincent' && guestIds.includes(recipient)) {
+        stop();
+        previousSpeaker.current = recipient;
+        setCafeOpen(true);
+        return;
+      }
+    }
     // Only a direct request triggers the gesture. Talking about a squatting
     // figure in a painting or asking someone not to squat stays a conversation.
-    const address = english ? englishAddress(text) : null;
+    const address = english ? namedInEnglish : null;
     const targets = english && /^(?:please\s+)?(?:crouch|squat)(?: down)?(?: for a moment)?[.!?]*$/i.test(address?.rest ?? text)
       ? crouchTargets('蹲下', guestIds, address?.id ?? selectedId) : crouchTargets(text, guestIds, selectedId);
     if (targets) {
@@ -324,6 +338,7 @@ export default function StandingDuoApp() {
         crouchRequest={crouchRequest}
         talkingPair={talkingPair}
         ambientAllowed={ambientAllowed}
+        covered={cafeOpen}
         onRestLowered={sayTired}
         reply={aside ?? reply}
         selectedId={selectedId}
@@ -363,7 +378,7 @@ export default function StandingDuoApp() {
       <RoomInput
         onSend={send}
         onComposingChange={setComposing}
-        busy={!arrived || pending || guestPanel || !!painting || memoryPanel}
+        busy={!arrived || pending || guestPanel || !!painting || cafeOpen || memoryPanel}
         speaking={speech.speaking}
         loading={speech.loading}
         onStop={stop}
@@ -372,6 +387,7 @@ export default function StandingDuoApp() {
         speechError={roomNotice || memoryError || speech.error || dialogue.error}
       />
     </main>
+    {cafeOpen && <CafeVisit onLeave={() => setCafeOpen(false)} />}
     {memoryPanel && <Modal title={t('回忆记录', 'Memories')} onClose={closeMemories} wide>
       <PaintingMemories memories={loadSave().save.paintingMemories ?? []} artists={artists} onReplay={work => {
         closeMemories();

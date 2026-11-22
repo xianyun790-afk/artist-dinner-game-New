@@ -6,7 +6,26 @@ const clauses = (text: string) => text.split(/[，。！？,!?；;\n]/u).map(par
 
 // Quoted dialogue describes speech; it does not address this table. Preserve
 // offsets so callers can still order multiple explicit addressees correctly.
-export const unquotedConversationText = (text: string): string => text.replace(/“[^”]*”|「[^」]*」|『[^』]*』|‘[^’]*’|"[^"]*"|'[^'\n]*'/gu, match => ' '.repeat(match.length));
+export const unquotedConversationText = (text: string): string => text.replace(/“[^”]*”|「[^」]*」|『[^』]*』|‘[^’]*’|"[^"]*"|(?<![\p{L}\p{N}])'[^\n]*?'(?![\p{L}\p{N}])/gu, match => ' '.repeat(match.length));
+
+const visitInChinese = /^(?:那|现在)?(?:我(?:们)?(?:也|还|很|真)?想(?:要)?|想(?:要)?|(?:你|您|我们|我)?(?:能不能|能|可不可以|可以)|请(?:你|您)?)?(?:(?:带|领|让)(?:我们|我))?(?:一起|先)?(?:走[进入到]|进(?:入|到)?|去(?:看看?)?|到|看看?|参观|逛逛?|体验|探访)(?:一下|一趟)?\s*/u;
+const visitInEnglish = /^(?:(?:i (?:want|would like|would love) to|i['’]d (?:like|love) to|(?:can|could|may) i|let me) (?:step into|enter|visit|experience|see|walk into|go to|look around|explore)|(?:(?:can|could|would) you )?(?:please )?(?:(?:take|bring) me (?:into|to)|show me))\s+/i;
+const destinationInChinese = /^(?:(?:你|您|梵高)(?:的?(?:生活场景|生活环境|生活的地方|日常生活|日常场景|世界|家里)|(?:当年|以前|真实)?的(?:日常|生活)(?:$|里|中|看看|吧|吗)|(?:当年|以前|曾经|平时)?(?:生活|住|居住|常去)(?:过)?的地方|(?:画里|画中)的(?:咖啡馆|咖啡座))|夜(?:间|晚)(?:的)?露天咖啡(?:座|馆))/u;
+const destinationInEnglish = /^(?:your (?:everyday life|daily life|life|world|home|neighbou?rhood)|where you (?:lived|used to live)|(?:the )?places? (?:where you lived|you used to visit)|(?:the )?caf[eé] terrace(?: at night)?)(?=\s|[.!?]|$)/i;
+
+export function requestsLifeVisit(text: string): boolean {
+  const clean = unquotedConversationText(text).trim().replace(/^(?:文森特·)?梵高\s*[：:]?\s*/u, '');
+  const parts = clauses(clean);
+  if (parts.some(part => /^(?:但(?:是)?|还是|先|我(?:们)?)*(?:不想|不要|别|不去)(?:再)?(?:去|走|进|打开|看|体验|参观|带我|了)|^(?:(?:but|actually)\s+)?(?:i\s+)?(?:don['’]t|do not|would rather not)\s+(?:want to go|take me|go|enter|visit|open)/iu.test(part))) return false;
+  return parts.some((part, index) => {
+    const before = parts[index - 1] ?? '';
+    if (/(?:听说|(?:有人|他们?|她们?|角色|人物|主角|朋友)(?:说|问)(?:道)?|台词是|对白是|比如|例如|\b(?:said|says|line is|for example))\s*[:：]?$/iu.test(before)) return false;
+    const action = visitInChinese.exec(part);
+    if (action) return destinationInChinese.test(part.slice(action[0].length));
+    const englishAction = visitInEnglish.exec(part);
+    return !!englishAction && destinationInEnglish.test(part.slice(englishAction[0].length));
+  });
+}
 
 export function requestsQuiet(text: string): boolean {
   return unquotedConversationText(text).split(/[。！？!?\n]/u).some(sentence => clauses(sentence).some((part,index,parts) => {
