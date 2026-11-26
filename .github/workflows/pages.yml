@@ -19,6 +19,8 @@ jobs:
     env:
       TRAIL_RELEASE: cloudridge-web-v1.1.0
       TRAIL_SHA256: de1c49926fdd9fcacdf7e9e7a863cd9ee898051432a4b6eebbfc6c37f813b3d5
+      # Unity uses the document directory to locate the player's saves.
+      TRAIL_ENTRY: cloudridge-web-v1.0.0
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -43,7 +45,7 @@ jobs:
       - name: Build O’Keeffe’s entrance
         run: npm run build --prefix worlds/okeeffe -- --outDir ../../dist/okeeffe
         env:
-          VITE_TRAIL_SCENE_URL: ./trail/${{ env.TRAIL_RELEASE }}/
+          VITE_TRAIL_SCENE_URL: ./trail/${{ env.TRAIL_ENTRY }}/?v=${{ env.TRAIL_RELEASE }}
       - name: Include the Cloudridge Trail WebGL build
         run: |
           archive="$RUNNER_TEMP/cloudridge-web.tar.gz"
@@ -54,6 +56,11 @@ jobs:
           mkdir -p "$destination"
           tar -xzf "$archive" -C "$destination"
           test -s "$destination/index.html"
+          if [ "$TRAIL_ENTRY" != "$TRAIL_RELEASE" ]; then
+            entry="dist/okeeffe/trail/$TRAIL_ENTRY"
+            mkdir -p "$entry"
+            sed "s|<head>|<head><base href=\"../$TRAIL_RELEASE/\">|" "$destination/index.html" > "$entry/index.html"
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

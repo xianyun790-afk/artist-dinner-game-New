@@ -21,7 +21,7 @@
 
 邀请欧姬芙后，可以说「我想看看你的世界」，或问「你平时怎么创作」。如果提到一幅具体画作，例如《蓝色与绿色音乐》，会优先打开作品讲解。入场影片开始播放时，步道在后台载入。入场页和探索画面都可以点「返回对话」，确认后继续原来的对话。手机上用左下角摇杆移动，拖动画面环顾。
 
-本地开发默认使用 `http://127.0.0.1:4189/`。GitHub Pages 将 `worlds/okeeffe` 的入场页和版本化的 Unity WebGL 构建一起发布到 `/okeeffe/`。Unity 项目通过 `TrailWebBuild.BuildForPages` 输出 `Builds/AfterglowWeb`。更新 Unity 时，把该目录下的 `index.html` 与 `Build/` 打包为新版本的 GitHub Release 附件，并更新 Pages 工作流里的版本和 SHA-256。独立部署时可用 `VITE_OKEEFFE_WORLD_URL` 指定入场页。
+本地开发默认使用 `http://127.0.0.1:4189/`。GitHub Pages 将 `worlds/okeeffe` 的入场页和版本化的 Unity WebGL 构建一起发布到 `/okeeffe/`。Unity 按入口目录读取背包存档，因此 Pages 工作流固定 `TRAIL_ENTRY`，用 `TRAIL_RELEASE` 更新资源。Unity 项目通过 `TrailWebBuild.BuildForPages` 输出 `Builds/AfterglowWeb`。更新 Unity 时，把该目录下的 `index.html` 与 `Build/` 打包为新版本的 GitHub Release 附件，并更新 `TRAIL_RELEASE` 和 SHA-256。独立部署时可用 `VITE_OKEEFFE_WORLD_URL` 指定入场页。
 
 ## 画作来源
 
