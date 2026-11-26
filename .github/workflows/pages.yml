@@ -17,8 +17,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      TRAIL_RELEASE: cloudridge-web-v1.0.0
-      TRAIL_SHA256: 0cfd09c7aaa044ff3c2f77d175526c046c346e9144abded06d4a71a7b23f0554
+      TRAIL_RELEASE: cloudridge-web-v1.1.0
+      TRAIL_SHA256: de1c49926fdd9fcacdf7e9e7a863cd9ee898051432a4b6eebbfc6c37f813b3d5
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}

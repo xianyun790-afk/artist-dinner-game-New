@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { t } from '@/lib/standingLanguage';
-import CafeApp from './CafeApp';
+import CafeApp, { type CafeLighting } from './CafeApp';
 
-export function CafeVisit({ onLeave }: { onLeave: () => void }) {
+export function CafeVisit({ onLeave }: { onLeave: (lighting: CafeLighting) => void }) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -12,9 +12,9 @@ export function CafeVisit({ onLeave }: { onLeave: () => void }) {
     return () => dialog.close();
   }, []);
 
-  const leave = () => {
+  const leave = (lighting: CafeLighting) => {
     ref.current?.close();
-    onLeave();
+    onLeave(lighting);
   };
 
   return (

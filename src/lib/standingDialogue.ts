@@ -1,6 +1,26 @@
 import conversations from './standingDialogue.json' with { type: 'json' };
 import scripts from './standingEnglish.json' with { type: 'json' };
 import { englishAddress, language, type Language } from './standingLanguage.ts';
+import type { CafeLighting } from '../cafe/CafeApp.tsx';
+
+const cafeReflections = {
+  dimmed: {
+    zh: '你熄灯的时候，石板路上的蓝才露出来。要画那条街，我会先铺那层蓝。',
+    en: 'When you put out the lamp, the blue in the cobbles came through. I’d start with that blue.',
+  },
+  relit: {
+    zh: '你把灯重新点亮，墙上的黄一回来，石板路的蓝就显得更深了。',
+    en: 'When you lit the lamp again, the yellow came back to the wall. It made the cobbles look deeper blue.',
+  },
+};
+
+export function cafeReflection(lighting: CafeLighting, lang: Language) {
+  if (lighting === 'unchanged') return undefined;
+  return {
+    text: cafeReflections[lighting][lang],
+    audio: `/audio/${lang === 'en' ? 'en' : 'dialogue'}/vincent-cafe-${lighting}.mp3`,
+  };
+}
 
 export function okeeffeWorldLine(lang: Language) {
   return recordedDialogue('georgia', lang === 'en' ? 'shall we take a walk' : '要不要出去走走', lang);

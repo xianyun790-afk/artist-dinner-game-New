@@ -8,15 +8,17 @@ import { mountCafeScene } from './createCafeScene';
 import './cafe.css';
 
 type Phase = 'loading' | 'ready' | 'error';
+export type CafeLighting = 'unchanged' | 'dimmed' | 'relit';
 const painting = artDirectory + 'painting.webp';
 
-export default function CafeApp({ onLeave }: { onLeave?: () => void }) {
+export default function CafeApp({ onLeave }: { onLeave?: (lighting: CafeLighting) => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const guides = useRef<HTMLDivElement>(null);
   const scene = useRef<ReturnType<typeof mountCafeScene> | null>(null);
   const [phase, setPhase] = useState<Phase>('loading');
   const [attempt, setAttempt] = useState(0);
-  const [lit, setLit] = useState(true);
+  const [lighting, setLighting] = useState<CafeLighting>('unchanged');
+  const lit = lighting !== 'dimmed';
   const [confirmReturn, setConfirmReturn] = useState(false);
   const [phonePortrait] = useState(() => window.matchMedia('(orientation: portrait) and (pointer: coarse) and (max-width: 640px)'));
   const [rotated, setRotated] = useState(phonePortrait.matches);
@@ -57,7 +59,7 @@ export default function CafeApp({ onLeave }: { onLeave?: () => void }) {
   }, [confirmReturn]);
 
   const returnToConversation = () => {
-    if (onLeave) onLeave();
+    if (onLeave) onLeave(lighting);
     else window.location.assign(import.meta.env.BASE_URL + t('?lang=zh', ''));
   };
 
@@ -97,7 +99,8 @@ export default function CafeApp({ onLeave }: { onLeave?: () => void }) {
       )}
       {phase === 'ready' && (
         <footer className="cafe-controls">
-          <button className="cafe-outline cafe-lamp" type="button" aria-pressed={lit} onClick={() => setLit(!lit)}>
+          <button className="cafe-outline cafe-lamp" type="button" aria-pressed={lit}
+            onClick={() => setLighting(state => state === 'dimmed' ? 'relit' : 'dimmed')}>
             <LampWallUp size={17} strokeWidth={1.65} aria-hidden="true" />
             {lit ? t('熄灯', 'Lights off') : t('点灯', 'Lights on')}
           </button>

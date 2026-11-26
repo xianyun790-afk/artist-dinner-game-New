@@ -9,7 +9,7 @@ type SceneState =
   | { phase: 'loading'; progress: number }
   | { phase: 'ready' | 'error' };
 
-export function TrailScene() {
+export function TrailScene({ active }: { active: boolean }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<SceneState>({ phase: 'loading', progress: 0 });
@@ -56,10 +56,10 @@ export function TrailScene() {
   }, [attempt]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !active) return;
     frame.current?.focus({ preventScroll: true });
     frame.current?.contentWindow?.postMessage({ type: 'trail:focus' }, sceneUrl.origin);
-  }, [ready]);
+  }, [active, ready]);
 
   function retry() {
     setState({ phase: 'loading', progress: 0 });
@@ -67,7 +67,8 @@ export function TrailScene() {
   }
 
   return (
-    <section className="trail-scene" data-ready={ready || undefined} aria-label="Cloudridge Trail">
+    <section className="trail-scene" data-ready={ready || undefined} data-active={active || undefined}
+      aria-label="Cloudridge Trail" aria-hidden={!active || undefined} inert={!active}>
       <div className="trail-veil" aria-hidden={ready || undefined}>
         {state.phase === 'loading' && (
           <div className="trail-status">

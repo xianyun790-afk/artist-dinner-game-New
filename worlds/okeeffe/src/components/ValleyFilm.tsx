@@ -44,6 +44,7 @@ export function ValleyFilm() {
   const [muted, setMuted] = useState(false);
   const [titleVisible, setTitleVisible] = useState(false);
   const [entered, setEntered] = useState(isTrailRoute);
+  const [trailStarted, setTrailStarted] = useState(false);
 
   const setSoundMuted = useCallback((silent: boolean) => {
     if (movie.current) movie.current.muted = silent;
@@ -159,6 +160,7 @@ export function ValleyFilm() {
         onLoadedMetadata={(event) => restorePosition(event.currentTarget)}
         onPlaying={() => {
           if (!resumeAfterResize.current) setPhase('playing');
+          setTrailStarted(true);
         }}
         onTimeUpdate={(event) => {
           if (resumeAfterResize.current) return;
@@ -202,7 +204,7 @@ export function ValleyFilm() {
       )}
 
       {!entered && phase === 'ended' && <span className="sr-only" role="status">Film ended</span>}
-      {entered && <TrailScene />}
+      {(entered || trailStarted) && <TrailScene active={entered} />}
       {!embedded && <ConversationReturn chinese={params.get('lang') === 'zh'} />}
     </main>
   );

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { BookOpen, Check, MessagesSquare, Plus, Square, X } from 'lucide-react';
 import { artists } from '@/lib/artists';
-import { okeeffeStudioReply, okeeffeWorldLine, recordedDialogue } from '@/lib/standingDialogue';
+import { cafeReflection, okeeffeStudioReply, okeeffeWorldLine, recordedDialogue } from '@/lib/standingDialogue';
 import { duoMembers, duoScript, parseDuoRequest, playDuoConversation } from '@/lib/duoConversation';
 import { findMentionedPainting } from '@/lib/paintings';
 import { paintingNarration } from '@/lib/paintingNarration';
@@ -27,6 +27,7 @@ import { PaintingMemories } from '@/components/PaintingMemories';
 import { Modal } from '@/components/ui/Modal';
 import type { ArtistReply } from '@/components/ArtistBubble';
 import { CafeVisit } from './cafe/CafeVisit';
+import type { CafeLighting } from './cafe/CafeApp';
 
 const englishAside = { ...scripts.rest, recordingUrl: scripts.rest.audio };
 const guestTags: Record<string, string> = { vincent: 'Colour and brushwork', dali: 'Dreams and the unexpected', monet: 'Light and reflections', georgia: 'Colour and form' };
@@ -367,6 +368,34 @@ export default function StandingDuoApp() {
     }).finally(finished);
   };
 
+  const leaveCafe = (lighting: CafeLighting) => {
+    setCafeOpen(false);
+    const artist = presentGuests.find(guest => guest.id === 'vincent');
+    const reflection = cafeReflection(lighting, locale);
+    if (!artist || !reflection) return;
+    const { text: line, audio } = reflection;
+    stop();
+    const controller = new AbortController();
+    request.current = controller;
+    setPending(true);
+    previousSpeaker.current = artist.id;
+    setSelectedId(artist.id);
+    setReply({ artistId: artist.id, text: line, thinking: false });
+    const remark: DialogueLine = { who: 'artist', name: displayName(artist), text: line };
+    setHistory(current => ({
+      ...current,
+      [artist.id]: [...(current[artist.id] ?? []), remark].slice(-12),
+    }));
+    const voice = speech.startStream(artist, controller.signal, undefined, { language: locale, recordingUrl: audio });
+    voice.push(line);
+    voice.end();
+    void voice.done.finally(() => {
+      if (request.current !== controller) return;
+      request.current = null;
+      setPending(false);
+    });
+  };
+
   const select = (id: string) => {
     if (duoRunning.current) stop();
     setSelectedId(current => current === id ? null : id);
@@ -442,7 +471,7 @@ export default function StandingDuoApp() {
         speechError={roomNotice || memoryError || speech.error || dialogue.error}
       />
     </main>
-    {cafeOpen && <CafeVisit onLeave={() => setCafeOpen(false)} />}
+    {cafeOpen && <CafeVisit onLeave={leaveCafe} />}
     {okeeffeWorldOpen && <OkeeffeWorld src={okeeffeWorldUrl} onLeave={() => setOkeeffeWorldOpen(false)} />}
     {memoryPanel && <Modal title={t('回忆记录', 'Memories')} onClose={closeMemories} wide>
       <PaintingMemories memories={loadSave().save.paintingMemories ?? []} artists={artists} onReplay={work => {
