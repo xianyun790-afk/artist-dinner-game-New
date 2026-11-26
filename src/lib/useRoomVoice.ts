@@ -1,5 +1,5 @@
 import { t, language } from '@/lib/standingLanguage';
-import { hasLocalVoice } from './localVoice';
+import { hasLocalMic } from './localVoice';
 import { localMicAvailable, recordUtterance } from './roomMicrophone';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createVoiceTurn, type VoiceInputTiming, type VoiceResults } from './voiceTurn';
@@ -75,7 +75,7 @@ export function useRoomVoice(onText: (text: string) => void, blocked: boolean, o
   };
   const start = async () => {
     if (!intent.current || busy.current || current.current || local.current || document.hidden) return;
-    if (!hasLocalVoice()) { startNative(); return; }
+    if (!hasLocalMic()) { startNative(); return; }
     const controller = new AbortController();
     local.current = controller;
     const active = () => local.current === controller && intent.current && !busy.current && !document.hidden;

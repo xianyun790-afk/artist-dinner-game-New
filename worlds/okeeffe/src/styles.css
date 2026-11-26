@@ -1,0 +1,264 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/InstrumentSerif-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  color: #fff;
+  background: #152e47;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+}
+
+.theater {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  outline: none;
+  background: #346088;
+  --side-inset: clamp(16px, 2.8vw, 43px);
+  --control-inset: clamp(16px, 3.2vh, 35px);
+  --entry-bottom: max(8dvh, 68px);
+  --title-clearance: calc(var(--entry-bottom) + 66px);
+}
+
+.theater video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.arrival-title {
+  position: absolute;
+  z-index: 1;
+  bottom: max(16.5dvh, var(--title-clearance));
+  inset-inline: 22px;
+  margin: 0;
+  color: #fff;
+  text-align: center;
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: clamp(40px, min(9vw, 12dvh), 142px);
+  font-weight: 400;
+  line-height: .92;
+  letter-spacing: -.018em;
+  text-shadow: 0 2px 12px #10284680;
+  pointer-events: none;
+  animation: arrival 850ms cubic-bezier(.2, .6, .3, 1) both;
+}
+
+@keyframes arrival {
+  from { opacity: 0; transform: translateY(9px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.film-button {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid #f2f8ff61;
+  border-radius: 99px;
+  color: #fff;
+  background: #0e27465c;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.film-button:hover {
+  border-color: #f2f8ffbd;
+  background: #0e2746ad;
+}
+
+.film-button:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 4px;
+}
+
+.sound-button,
+.start-control {
+  position: absolute;
+  z-index: 2;
+  bottom: max(var(--control-inset), env(safe-area-inset-bottom));
+}
+
+.entry-button {
+  position: absolute;
+  z-index: 2;
+  bottom: var(--entry-bottom);
+  left: 50%;
+  min-width: 116px;
+  min-height: 48px;
+  padding-inline: 20px 17px;
+  border-color: #fff;
+  color: #122944;
+  background: #fff;
+  transform: translateX(-50%);
+  animation: entry 500ms ease-out both;
+}
+
+.entry-button:hover {
+  border-color: #fff;
+  background: #e4f0fb;
+}
+
+@keyframes entry {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sound-button {
+  right: max(var(--side-inset), env(safe-area-inset-right));
+  border-color: transparent;
+  background: transparent;
+  filter: drop-shadow(0 1px 3px #102846b3);
+}
+
+.sound-button:hover {
+  border-color: transparent;
+  background: #1028464d;
+}
+
+.start-control {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100% - 145px);
+  transform: translateX(-50%);
+}
+
+.start-control p {
+  margin: 0;
+  color: #fff;
+  text-align: center;
+  font-size: 13px;
+  text-shadow: 0 2px 5px #0a2238;
+}
+
+.start-button {
+  padding-inline: 16px 18px;
+  white-space: nowrap;
+}
+
+.trail-scene,
+.trail-veil,
+.trail-frame {
+  position: absolute;
+  inset: 0;
+}
+
+.trail-scene {
+  z-index: 3;
+}
+
+.trail-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: #182421;
+  transition: opacity 760ms ease-in-out;
+}
+
+.trail-scene[data-ready] .trail-frame {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.trail-veil {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #1824215e, #182421b3);
+  animation: entry 450ms ease-out both;
+}
+
+.trail-status {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 20px;
+  color: white;
+  text-align: center;
+  text-shadow: 0 2px 12px #152b29;
+}
+
+.trail-status p {
+  font: 400 clamp(30px, 5vw, 44px) / 1 "Instrument Serif", Georgia, serif;
+}
+
+.trail-status progress {
+  width: min(150px, 50vw);
+  height: 2px;
+  accent-color: #ebf0de;
+}
+
+.trail-recovery {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.trail-recovery a {
+  text-underline-offset: 3px;
+  text-decoration: underline;
+}
+
+@media (max-aspect-ratio: 19/25) {
+  .arrival-title {
+    bottom: max(20.5dvh, var(--title-clearance));
+    inset-inline: 16px;
+    font-size: clamp(40px, 14vw, 80px);
+    line-height: .87;
+  }
+
+  .arrival-title span {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrival-title,
+  .entry-button,
+  .film-button,
+  .trail-frame,
+  .trail-veil {
+    animation: none;
+    transition: none;
+  }
+}
+
+.conversation-return {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: max(16px, env(safe-area-inset-left));
+  z-index: 4;
+  padding: 0 14px 0 12px;
+  background: #142b3bdb;
+}

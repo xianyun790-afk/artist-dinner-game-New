@@ -1,8 +1,9 @@
 // The desktop launcher owns the recording folder. A SHA-256 key keeps spoken
 // text out of filenames, HTTP paths and logs. Store the original encoded bytes.
 import { language, type Language } from './standingLanguage';
-export const hasLocalVoice = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)
-  && location.port === '4893';
+const isLoopback = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+export const hasLocalVoice = () => isLoopback() && location.port === '4893';
+export const hasLocalMic = () => isLoopback() && (import.meta.env.DEV || location.port === '4893');
 
 export async function recordingPath(profile: unknown, text: string) {
   const bytes = new TextEncoder().encode(JSON.stringify([profile, text.trim()]));

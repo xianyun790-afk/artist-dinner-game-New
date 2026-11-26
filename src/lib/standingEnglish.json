@@ -41,7 +41,8 @@
       "questions": [
         "hello",
         "hi",
-        "nice to meet you"
+        "nice to meet you",
+        "good to meet you"
       ],
       "text": "Pull up a chair. You get a good view from here.",
       "audio": "/audio/en/georgia-hello.mp3"
@@ -50,7 +51,9 @@
       "artistId": "georgia",
       "questions": [
         "shall we take a walk",
-        "would you like to go for a walk"
+        "would you like to go for a walk",
+        "let's take a walk",
+        "do you want to go for a walk"
       ],
       "text": "Sure. I walk slowly. Stop me if you see something.",
       "audio": "/audio/en/georgia-walk.mp3"

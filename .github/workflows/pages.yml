@@ -16,6 +16,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      TRAIL_RELEASE: cloudridge-web-v1.0.0
+      TRAIL_SHA256: 0cfd09c7aaa044ff3c2f77d175526c046c346e9144abded06d4a71a7b23f0554
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -25,6 +28,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            worlds/okeeffe/package-lock.json
       - id: pages
         uses: actions/configure-pages@v5
       - run: npm ci
@@ -33,6 +39,21 @@ jobs:
         run: npm run build -- --base "$PAGES_BASE/"
         env:
           PAGES_BASE: ${{ steps.pages.outputs.base_path }}
+      - run: npm ci --prefix worlds/okeeffe
+      - name: Build O’Keeffe’s entrance
+        run: npm run build --prefix worlds/okeeffe -- --outDir ../../dist/okeeffe
+        env:
+          VITE_TRAIL_SCENE_URL: ./trail/${{ env.TRAIL_RELEASE }}/
+      - name: Include the Cloudridge Trail WebGL build
+        run: |
+          archive="$RUNNER_TEMP/cloudridge-web.tar.gz"
+          destination="dist/okeeffe/trail/$TRAIL_RELEASE"
+          curl --fail --location --retry 3 --output "$archive" \
+            "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$TRAIL_RELEASE/cloudridge-web.tar.gz"
+          printf '%s  %s\n' "$TRAIL_SHA256" "$archive" | sha256sum --check
+          mkdir -p "$destination"
+          tar -xzf "$archive" -C "$destination"
+          test -s "$destination/index.html"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

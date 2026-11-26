@@ -25,13 +25,13 @@
   },
   {
     "artistId": "georgia", "artistName": "欧姬芙",
-    "questions": ["你好", "初次见面", "在吗"],
+    "questions": ["你好", "你好啊", "你好呀", "初次见面", "很高兴认识你", "在吗"],
     "text": "你好。我喜欢你挑的这个位置，安静，说话也听得清。",
     "audio": "/audio/dialogue/georgia-hello.mp3"
   },
   {
     "artistId": "georgia", "artistName": "欧姬芙",
-    "questions": ["要不要出去走走", "想去散步吗", "一起散步吗"],
+    "questions": ["要不要出去走走", "想去散步吗", "一起散步吗", "我们去散步吧", "你想出去走走吗", "一起出去走走吧"],
     "text": "想。我喜欢慢慢走。你要是看见什么有意思的，我们就停一会儿。",
     "audio": "/audio/dialogue/georgia-walk.mp3"
   },

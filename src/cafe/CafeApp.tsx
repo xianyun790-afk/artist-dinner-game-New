@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, LampWallUp } from 'lucide-react';
 import { t } from '@/lib/standingLanguage';
+import { SceneReturnConfirmation } from '@/components/ui/SceneReturnConfirmation';
 import { cafeRoute } from './cafeRoute';
 import { artDirectory } from './cafeWorld';
 import { mountCafeScene } from './createCafeScene';
@@ -16,6 +17,7 @@ export default function CafeApp({ onLeave }: { onLeave?: () => void }) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [attempt, setAttempt] = useState(0);
   const [lit, setLit] = useState(true);
+  const [confirmReturn, setConfirmReturn] = useState(false);
   const [phonePortrait] = useState(() => window.matchMedia('(orientation: portrait) and (pointer: coarse) and (max-width: 640px)'));
   const [rotated, setRotated] = useState(phonePortrait.matches);
 
@@ -43,6 +45,22 @@ export default function CafeApp({ onLeave }: { onLeave?: () => void }) {
     scene.current?.setLit(lit);
   }, [lit, attempt]);
 
+  useEffect(() => {
+    if (confirmReturn) return;
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented || event.repeat) return;
+      event.preventDefault();
+      setConfirmReturn(true);
+    };
+    document.addEventListener('keydown', escape);
+    return () => document.removeEventListener('keydown', escape);
+  }, [confirmReturn]);
+
+  const returnToConversation = () => {
+    if (onLeave) onLeave();
+    else window.location.assign(import.meta.env.BASE_URL + t('?lang=zh', ''));
+  };
+
   return (
     <main className="cafe-app" data-rotated={rotated}>
       <section className="cafe-stage" aria-label={t('全景街景', 'Panoramic street scene')} data-phase={phase}>
@@ -61,13 +79,10 @@ export default function CafeApp({ onLeave }: { onLeave?: () => void }) {
       </section>
 
       <header className="cafe-header">
-        {onLeave ? <button className="cafe-home" type="button" onClick={onLeave}>
+        <button className="cafe-home" type="button" onClick={() => setConfirmReturn(true)}>
           <ArrowLeft size={17} strokeWidth={1.7} aria-hidden="true" />
-          {t('回去聊天', 'Back to conversation')}
-        </button> : <a className="cafe-home" href={import.meta.env.BASE_URL + t('?lang=zh', '')} aria-label={t('回到余光', 'Back to Afterglow')}>
-          <ArrowLeft size={17} strokeWidth={1.7} aria-hidden="true" />
-          <span>{t('余光', 'Afterglow')}</span>
-        </a>}
+          {t('返回对话', 'Back to conversation')}
+        </button>
       </header>
 
       {phase === 'loading' && <p className="cafe-status" role="status">{t('正在加载场景…', 'Loading the scene…')}</p>}
@@ -88,6 +103,7 @@ export default function CafeApp({ onLeave }: { onLeave?: () => void }) {
           </button>
         </footer>
       )}
+      {confirmReturn && <SceneReturnConfirmation rotated={rotated} onStay={() => setConfirmReturn(false)} onReturn={returnToConversation} />}
     </main>
   );
 }

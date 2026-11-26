@@ -21,7 +21,6 @@ export function CafeVisit({ onLeave }: { onLeave: () => void }) {
     <dialog ref={ref} className="cafe-visit" aria-label={t('夜间露天咖啡座', 'Café Terrace at Night')} onCancel={event => {
       if (event.target !== event.currentTarget) return;
       event.preventDefault();
-      leave();
     }}>
       <CafeApp onLeave={leave} />
     </dialog>

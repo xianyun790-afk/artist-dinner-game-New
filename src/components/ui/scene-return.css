@@ -1,0 +1,56 @@
+.scene-return-confirmation {
+  position: fixed;
+  inset: 0;
+  width: min(360px, calc(100vw - 32px));
+  max-width: none;
+  margin: auto;
+  padding: 22px;
+  box-sizing: border-box;
+  border: 1px solid #f8f6ef40;
+  border-radius: 16px;
+  color: #f9f6ee;
+  background: #19262e;
+  font: 400 15px/1.4 system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+.scene-return-confirmation[data-rotated="true"] {
+  width: min(360px, calc(100dvh - 32px));
+  transform: rotate(90deg);
+}
+
+.scene-return-confirmation::backdrop { background: #08101991; }
+
+.scene-return-confirmation > h2 {
+  margin: 0 0 20px;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.scene-return-actions {
+  display: flex;
+  justify-content: end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scene-return-confirmation .scene-return-actions > button {
+  min-height: 44px;
+  border: 1px solid #f8f6ef59;
+  border-radius: 10px;
+  padding: 6px 14px;
+  color: #f9f6ee;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.scene-return-confirmation .scene-return-actions > button:last-child {
+  color: #17252c;
+  background: #f4e9cf;
+}
+
+.scene-return-confirmation .scene-return-actions > button:focus-visible {
+  outline: 2px solid #f3dfaf;
+  outline-offset: 2px;
+}

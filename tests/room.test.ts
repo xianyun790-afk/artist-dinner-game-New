@@ -2,8 +2,17 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {artists} from '../src/lib/artists.ts';
 import {responderFor,roomReply} from '../src/lib/room.ts';
-import {requestsLifeVisit} from '../src/lib/conversationIntent.ts';
+import {mentionsOkeeffeWorld,requestsLifeVisit,requestsMonetArrival} from '../src/lib/conversationIntent.ts';
 const guests=artists.slice(0,4);
+
+test('Monet only enters on a direct call in Chinese or English', () => {
+  for (const cue of ['莫奈', '请莫奈过来', '莫奈，你能过来吗？', '我想和莫奈聊聊', 'Claude Monet', 'Could you invite Monet?', 'Monet, come in.', 'I’d like to talk to Monet']) {
+    assert.equal(requestsMonetArrival(cue), true, cue);
+  }
+  for (const text of ['看看莫奈的睡莲', '我不想请莫奈过来', '梵高说：“请莫奈过来”', "Don’t invite Monet", "Tell me about Monet's paintings"]) {
+    assert.equal(requestsMonetArrival(text), false, text);
+  }
+});
 test('anyone can speak at the table without first selecting an artist',()=>{
   assert.equal(responderFor('今天好累',guests,null,null)?.id,'georgia');
   assert.equal(responderFor('日落真美',guests,null,null)?.id,'monet');
@@ -30,6 +39,15 @@ test('direct invitations to visit can open the café without a painting title',(
 test('a chosen guest stays in the conversation and an unnamed follow-up has context',()=>{
   assert.equal(responderFor('颜色呢',guests,'monet',null)?.id,'monet');
   assert.equal(responderFor('后来呢',guests,null,'dali')?.id,'dali');
+});
+test('O’Keeffe’s world responds to creation and world cues in either language',()=>{
+  for (const text of ['你平时怎么创作？','我想看看你的世界','Tell me about your creative process','Take me into your world']) {
+    assert.equal(mentionsOkeeffeWorld(text),true,text);
+  }
+  for (const text of ['你的花好漂亮','先别进入你的世界','我不想聊创作',"Don't take me into your world",'她说「进入我的世界」',
+    '欧姬芙，讲讲《蓝色与绿色音乐》的创作过程。', 'O’Keeffe, how did you create Blue and Green Music?']) {
+    assert.equal(mentionsOkeeffeWorld(text),false,text);
+  }
 });
 test('removed seats cannot receive a response, including a custom-only table',()=>{
   const a={...artists[4],id:'custom-paper',name:'纸灯'};

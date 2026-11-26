@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { BookOpen, Check, MessagesSquare, Plus, Square, X } from 'lucide-react';
 import { artists } from '@/lib/artists';
-import { recordedDialogue } from '@/lib/standingDialogue';
+import { okeeffeStudioReply, okeeffeWorldLine, recordedDialogue } from '@/lib/standingDialogue';
 import { duoMembers, duoScript, parseDuoRequest, playDuoConversation } from '@/lib/duoConversation';
 import { findMentionedPainting } from '@/lib/paintings';
 import { paintingNarration } from '@/lib/paintingNarration';
@@ -15,13 +15,14 @@ import { displayName, english, englishAddress, language, setStandingLanguage, st
 import { deriveArtistExpression } from '@/lib/artistExpression';
 import { useDialogue } from '@/lib/useDialogue';
 import { directlyAddressedArtists, responderFor, roomReply, everydayFallback } from '@/lib/room';
-import { requestsLifeVisit } from '@/lib/conversationIntent';
+import { mentionsOkeeffeWorld, requestsLifeVisit, requestsMonetArrival } from '@/lib/conversationIntent';
 import { useSpeech } from '@/lib/useSpeech';
 import type { DialogueLine } from '@/lib/dialogueService';
 import type { Artist } from '@/lib/types';
 import { RoomInput } from '@/components/RoomInput';
 import { PaintingScene } from '@/components/PaintingScene';
 import { StandingScene } from '@/components/StandingScene';
+import { OkeeffeWorld } from '@/components/OkeeffeWorld';
 import { PaintingMemories } from '@/components/PaintingMemories';
 import { Modal } from '@/components/ui/Modal';
 import type { ArtistReply } from '@/components/ArtistBubble';
@@ -29,6 +30,10 @@ import { CafeVisit } from './cafe/CafeVisit';
 
 const englishAside = { ...scripts.rest, recordingUrl: scripts.rest.audio };
 const guestTags: Record<string, string> = { vincent: 'Colour and brushwork', dali: 'Dreams and the unexpected', monet: 'Light and reflections', georgia: 'Colour and form' };
+const okeeffeWorldUrl = import.meta.env.VITE_OKEEFFE_WORLD_URL?.trim()
+  || (['127.0.0.1', 'localhost', '[::1]'].includes(window.location.hostname)
+    ? 'http://127.0.0.1:4189/'
+    : new URL('okeeffe/', new URL(import.meta.env.BASE_URL, window.location.href)).href);
 
 export default function StandingDuoApp() {
   const [locale, setLocale] = useState(language);
@@ -53,6 +58,7 @@ export default function StandingDuoApp() {
   };
 
   const [guestIds, setGuestIds] = useState<string[]>(() => [...defaultStandingGuests]);
+  const [failedGuestIds, setFailedGuestIds] = useState<readonly string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reply, setReply] = useState<ArtistReply | null>(null);
   const [pending, setPending] = useState(false);
@@ -61,6 +67,8 @@ export default function StandingDuoApp() {
   const [memoryPanel, setMemoryPanel] = useState(false);
   const closeMemories = useCallback(() => setMemoryPanel(false), []);
   const [cafeOpen, setCafeOpen] = useState(false);
+  const [okeeffeWorldOpen, setOkeeffeWorldOpen] = useState(false);
+  const visitingWorld = cafeOpen || okeeffeWorldOpen;
   const [talkingPair, setTalkingPair] = useState<readonly string[] | null>(null);
   const [roomNotice, setRoomNotice] = useState('');
   const exchangeIndex = useRef(0);
@@ -88,6 +96,8 @@ export default function StandingDuoApp() {
   const speechRef = useRef(speech);
   speechRef.current = speech;
   const guests = useMemo(() => guestIds.map(id => artists.find(artist => artist.id === id)).filter((artist): artist is Artist => !!artist), [guestIds]);
+  const presentGuests = guests.filter(guest => !failedGuestIds.includes(guest.id));
+  const presentGuestIds = presentGuests.map(guest => guest.id);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -137,7 +147,7 @@ export default function StandingDuoApp() {
     };
   }, [clearAside, stop]);
 
-  const ambientAllowed = arrived && !painting && !cafeOpen && !memoryPanel && !talkingPair && !guestPanel && !pending && !speech.speaking && !speech.loading && !composing && !aside;
+  const ambientAllowed = arrived && !painting && !visitingWorld && !memoryPanel && !talkingPair && !guestPanel && !pending && !speech.speaking && !speech.loading && !composing && !aside;
   const sayTired = () => {
     const tiredAside = locale === 'en' ? englishAside : chineseAside;
     const artist = guests.find(guest => guest.id === tiredAside.artistId);
@@ -155,7 +165,7 @@ export default function StandingDuoApp() {
 
   const startDuo = (topic: string, named: string[] = []) => {
     if (!arrived || painting) return;
-    const members = duoMembers(guests, named);
+    const members = duoMembers(presentGuests, named);
     stop();
     if (!members) {
       setRoomNotice(named.length ? t("先把这两位艺术家都请到场上吧。", "Invite both artists to the studio first.") : t("再请一位艺术家，就能听他们聊了。", "Invite a second artist to start a conversation."));
@@ -206,15 +216,36 @@ export default function StandingDuoApp() {
 
   const send = (raw: string) => {
     const text = raw.trim();
-    if (!text || pending || !arrived || guestPanel || painting || cafeOpen || memoryPanel) return;
+    if (!text || pending || !arrived || guestPanel || painting || visitingWorld || memoryPanel) return;
     setRoomNotice('');
+    if (requestsMonetArrival(text)) {
+      if (guestIds.includes('monet')) {
+        stop();
+        setReply(null);
+        if (failedGuestIds.includes('monet')) {
+          setRoomNotice(t('莫奈还没载入。请点「重试载入」。', 'Monet is still unavailable. Select “Retry loading”.'));
+        } else setSelectedId('monet');
+      } else {
+        toggleGuest('monet');
+      }
+      return;
+    }
     const duo = parseDuoRequest(text);
     if (duo) { startDuo(duo.topic, duo.named); return; }
     const namedInEnglish = englishAddress(text);
+    const namedRecipient = namedInEnglish?.id ?? directlyAddressedArtists(text, artists)[0]?.id;
+    const missingGuest = namedRecipient && !presentGuestIds.includes(namedRecipient) ? artists.find(artist => artist.id === namedRecipient) : undefined;
+    if (missingGuest) {
+      stop();
+      setReply(null);
+      setRoomNotice(failedGuestIds.includes(missingGuest.id) && guestIds.includes(missingGuest.id)
+        ? t(`${missingGuest.name}还没载入。请点「重试载入」。`, `${missingGuest.english} is still unavailable. Select “Retry loading”.`)
+        : t(`${missingGuest.name}还没到场。点「＋」邀请来宾。`, `${missingGuest.english} isn’t here yet. Select “+” to invite them.`));
+      return;
+    }
     if (requestsLifeVisit(namedInEnglish?.rest ?? text)) {
-      const recipient = namedInEnglish?.id ?? directlyAddressedArtists(text, artists)[0]?.id
-        ?? selectedId ?? previousSpeaker.current ?? 'vincent';
-      if (recipient === 'vincent' && guestIds.includes(recipient)) {
+      const recipient = namedRecipient ?? selectedId ?? previousSpeaker.current ?? 'vincent';
+      if (recipient === 'vincent' && presentGuestIds.includes(recipient)) {
         stop();
         previousSpeaker.current = recipient;
         setCafeOpen(true);
@@ -225,20 +256,21 @@ export default function StandingDuoApp() {
     // figure in a painting or asking someone not to squat stays a conversation.
     const address = english ? namedInEnglish : null;
     const targets = english && /^(?:please\s+)?(?:crouch|squat)(?: down)?(?: for a moment)?[.!?]*$/i.test(address?.rest ?? text)
-      ? crouchTargets('蹲下', guestIds, address?.id ?? selectedId) : crouchTargets(text, guestIds, selectedId);
+      ? crouchTargets('蹲下', presentGuestIds, address?.id ?? selectedId) : crouchTargets(text, presentGuestIds, selectedId);
     if (targets) {
       stop();
       crouchRequest.current = targets;
-      const daliStays = !targets.length && guestIds.includes('dali') && (text.includes('达利') || address?.id === 'dali' || selectedId === 'dali' || guestIds.length === 1);
+      const daliStays = !targets.length && presentGuestIds.includes('dali') && (text.includes('达利') || address?.id === 'dali' || selectedId === 'dali' || presentGuests.length === 1);
       setReply(daliStays ? { artistId: 'dali', text: t("我站着就好。", "I think I'll stay standing."), thinking: false } : null);
       return;
     }
     const work = findMentionedPainting(text);
     const tours: typeof paintingNarration = english ? scripts.paintings : paintingNarration;
     const narration = work && tours[work.id];
-    const artist = work
-      ? artists.find(a => a.id === work.artistId)
-      : guests.find(a => a.id === address?.id) ?? responderFor(text, guests, selectedId, previousSpeaker.current) ?? guests[0];
+    const partner = presentGuests.find(a => a.id === address?.id) ?? responderFor(text, presentGuests, selectedId, previousSpeaker.current) ?? presentGuests[0];
+    const visitArtist = (namedRecipient ?? partner?.id) === 'georgia' && mentionsOkeeffeWorld(text)
+      ? presentGuests.find(a => a.id === 'georgia') : undefined;
+    const artist = visitArtist ?? (work ? artists.find(a => a.id === work.artistId) : partner);
     if (!artist) return;
     stop();
     speech.unlock();
@@ -261,6 +293,23 @@ export default function StandingDuoApp() {
         setPending(false);
       }
     };
+    if (visitArtist) {
+      const invitation = okeeffeWorldLine(locale);
+      if (!invitation) {
+        setOkeeffeWorldOpen(true);
+        finished();
+        return;
+      }
+      setReply({ artistId: artist.id, text: invitation.text, thinking: false });
+      remember(invitation.text);
+      const voice = speech.startStream(artist, controller.signal, undefined, { language: locale, recordingUrl: invitation.audio });
+      voice.push(invitation.text);
+      voice.end();
+      void voice.done.then(() => {
+        if (request.current === controller && !controller.signal.aborted) setOkeeffeWorldOpen(true);
+      }).finally(finished);
+      return;
+    }
     if (work) {
       const token = uid();
       const visit = { speakerId: artist.id, question: text, night: loadSave().save.night };
@@ -287,9 +336,11 @@ export default function StandingDuoApp() {
       vincent: "What's the first detail you noticed? That's where I'd start.",
       dali: "Tell me the oddest part. That's usually where my attention wanders.",
       monet: "Which part caught your eye? I'd like to look at it with you.",
-      georgia: "Come closer. Which edge did you notice first?",
+      georgia: "I like to start with something I can see. What have you been looking at lately?",
     };
-    const fallback = english ? offlineLines[artist.id] ?? "I'm listening. Go on." : roomReply(artist, text) ?? everydayFallback(artist, text);
+    const studioReply = artist.id === 'georgia' ? okeeffeStudioReply(text, locale) : undefined;
+    const fallback = studioReply ?? (english ? offlineLines[artist.id] ?? "I'm listening. Go on."
+      : roomReply(artist, text) ?? (artist.id === 'georgia' ? artist.observation : everydayFallback(artist, text)));
     const expression = deriveArtistExpression(undefined, text);
     const preset = recordedDialogue(artist.id, text);
     const voice = speech.startStream(artist, controller.signal, undefined, {
@@ -324,21 +375,25 @@ export default function StandingDuoApp() {
     if (!standingModels[id] || (guestIds.length === 1 && guestIds[0] === id)) return;
     stop();
     setArrived(false);
+    setRoomNotice('');
     setGuestPanel(false);
     setReply(null);
-    if (selectedId === id) setSelectedId(null);
+    if (id === 'monet' && !guestIds.includes(id)) setSelectedId(id);
+    else if (selectedId === id) setSelectedId(null);
     crouchRequest.current = null;
     setGuestIds(current => current.includes(id) ? current.length > 1 ? current.filter(value => value !== id) : current : [...current, id]);
   };
 
   return <div className="standing-app" onClickCapture={speech.unlock} onKeyDownCapture={speech.unlock}>
-    <main className="standing-stage" aria-label={t("艺术家白色摄影棚", "Artists’ studio")} inert={!!painting || memoryPanel}>
+    <main className="standing-stage" aria-label={t("艺术家白色摄影棚", "Artists’ studio")} inert={!!painting || memoryPanel || visitingWorld}>
       <StandingScene
         guests={guests}
+        failedIds={failedGuestIds}
+        onLoadFailures={setFailedGuestIds}
         crouchRequest={crouchRequest}
         talkingPair={talkingPair}
         ambientAllowed={ambientAllowed}
-        covered={cafeOpen}
+        covered={visitingWorld}
         onRestLowered={sayTired}
         reply={aside ?? reply}
         selectedId={selectedId}
@@ -353,7 +408,7 @@ export default function StandingDuoApp() {
         aria-haspopup="dialog" onClick={() => { stop(); setGuestPanel(false); setMemoryPanel(true); }}>
         <BookOpen size={17} strokeWidth={1.5} />
       </button>
-      {guests.length >= 2 && <button className="standing-duo" disabled={!arrived} aria-pressed={!!talkingPair}
+      {presentGuests.length >= 2 && <button className="standing-duo" disabled={!arrived} aria-pressed={!!talkingPair}
         title={talkingPair ? t("结束这段对谈", "End this conversation") : t("也可以说「你们俩聊聊……」指定话题", "Try saying “You two, talk about…”")}
         onClick={() => talkingPair ? stop() : startDuo('')}>
         {talkingPair ? <Square size={14} /> : <MessagesSquare size={16} />}
@@ -378,7 +433,7 @@ export default function StandingDuoApp() {
       <RoomInput
         onSend={send}
         onComposingChange={setComposing}
-        busy={!arrived || pending || guestPanel || !!painting || cafeOpen || memoryPanel}
+        busy={!arrived || pending || guestPanel || !!painting || visitingWorld || memoryPanel}
         speaking={speech.speaking}
         loading={speech.loading}
         onStop={stop}
@@ -388,6 +443,7 @@ export default function StandingDuoApp() {
       />
     </main>
     {cafeOpen && <CafeVisit onLeave={() => setCafeOpen(false)} />}
+    {okeeffeWorldOpen && <OkeeffeWorld src={okeeffeWorldUrl} onLeave={() => setOkeeffeWorldOpen(false)} />}
     {memoryPanel && <Modal title={t('回忆记录', 'Memories')} onClose={closeMemories} wide>
       <PaintingMemories memories={loadSave().save.paintingMemories ?? []} artists={artists} onReplay={work => {
         closeMemories();

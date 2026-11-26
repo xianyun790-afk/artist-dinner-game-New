@@ -4,6 +4,18 @@ import { findNamedPainting } from './paintings.ts';
 // word such as “喜欢”, “画” or “不想” alone does not identify its target.
 const clauses = (text: string) => text.split(/[，。！？,!?；;\n]/u).map(part => part.trim()).filter(Boolean);
 
+const monetName = '(?:克洛德[·・ ]?)?莫奈';
+const monetInvitation = new RegExp(
+  String.raw`^(?:(?:能不能|可不可以|可以|麻烦|帮我|我想|请)*(?:请|邀请|叫|喊|唤来|召唤|唤起|让)${monetName}(?:[，,]?(?:过来|进来|入场|来一下|来吧|来聊聊|来聊天))?|(?:我想|想|能不能|可以)?(?:跟|和|找)${monetName}(?:聊聊|聊一聊|聊天|说说话|谈谈)|${monetName}[，,]?(?:你|您)?(?:能不能|可不可以|能|可以|请)?(?:过来|进来|入场|来一下|来这里|来聊聊|来聊天|在吗)?)(?:吧|吗|一下)?$`,
+  'u',
+);
+const monetInvitationInEnglish = /^(?:(?:(?:can|could|would) you )?(?:please )?(?:invite|bring|call|summon) (?:claude )?monet(?: (?:in|here|over|to join us))?|(?:i (?:want|would like) to|i['’]d like to|(?:can|could|may) i|let me) (?:talk to|talk with|speak to|speak with|chat with) (?:claude )?monet|(?:claude )?monet(?:[ ,:]+(?:please )?(?:come in|come over|come here|join us))?)$/i;
+
+export function requestsMonetArrival(text: string): boolean {
+  const clean = unquotedConversationText(text).trim().replace(/[。！!？?.]+$/u, '').trim();
+  return monetInvitation.test(clean.replace(/\s+/gu, '')) || monetInvitationInEnglish.test(clean.replace(/\s+/gu, ' '));
+}
+
 // Quoted dialogue describes speech; it does not address this table. Preserve
 // offsets so callers can still order multiple explicit addressees correctly.
 export const unquotedConversationText = (text: string): string => text.replace(/“[^”]*”|「[^」]*」|『[^』]*』|‘[^’]*’|"[^"]*"|(?<![\p{L}\p{N}])'[^\n]*?'(?![\p{L}\p{N}])/gu, match => ' '.repeat(match.length));
@@ -25,6 +37,13 @@ export function requestsLifeVisit(text: string): boolean {
     const englishAction = visitInEnglish.exec(part);
     return !!englishAction && destinationInEnglish.test(part.slice(englishAction[0].length));
   });
+}
+
+export function mentionsOkeeffeWorld(text: string): boolean {
+  const clean = unquotedConversationText(text);
+  if (findNamedPainting(text) || declinesCreation(clean) || declinesTopic(clean)
+    || /(?:不要|先别|不用|不想).{0,8}(?:跳转|打开|进入|走进)|\b(?:don['’]t|do not)\s+(?:want to\s+)?(?:open|enter|take me|redirect|talk about)\b/iu.test(clean)) return false;
+  return /创作|世界|\b(?:world|creat(?:e|es|ed|ing|ion|ions|ive|ivity))\b/iu.test(clean);
 }
 
 export function requestsQuiet(text: string): boolean {

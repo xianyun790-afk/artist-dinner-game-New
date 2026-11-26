@@ -26,6 +26,8 @@ type Actor = {
 
 type StandingSceneProps = {
   guests: Artist[];
+  failedIds: readonly string[];
+  onLoadFailures: (ids: readonly string[]) => void;
   talkingPair: readonly string[] | null;
   crouchRequest: RefObject<readonly string[] | null>;
   reply: ArtistReply | null;
@@ -41,6 +43,9 @@ type StandingSceneProps = {
 
 const initialWalkSeconds = 4.15;
 const initialTurnSeconds = .85;
+const monetStrideLength = .270; // metres per cycle in Monet's in-place Walk
+const monetEntryCycles = 3;
+const monetSettleSeconds = .48;
 const floorDepth = -.15;
 const rearEntranceDepth = -2.35;
 const stepTurn = .32;
@@ -56,6 +61,7 @@ type Move = {
   startYaw: number;
   initial: boolean;
   entrancePath?: THREE.CubicBezierCurve3;
+  monetEntry?: { walkSeconds: number; heading: number };
   step?: { walk: number; name: 'Walk' | 'Step'; strides: number };
   arrival: boolean;
 };
@@ -116,6 +122,14 @@ const easeInOut = (value: number) => {
   return clamped * clamped * clamped * (clamped * (clamped * 6 - 15) + 10);
 };
 
+function entranceWalkProgress(value: number) {
+  const time = THREE.MathUtils.clamp(value, 0, 1);
+  const ramp = .10;
+  const edge = Math.min(time, 1 - time);
+  const distance = (edge < ramp ? edge * edge / (2 * ramp) : edge - ramp / 2) / (1 - ramp);
+  return time <= .5 ? distance : 1 - distance;
+}
+
 function cycloramaGeometry() {
   const width = 26;
   const columns = 2;
@@ -162,7 +176,7 @@ function desiredAction(actor: Actor, id: string, active: boolean) {
   return '';
 }
 
-export function StandingScene({ guests, talkingPair, crouchRequest, reply, selectedId, speaking, responding, ambientAllowed, covered, onRestLowered, onSelect, onEntranceComplete }: StandingSceneProps) {
+export function StandingScene({ guests, failedIds, onLoadFailures, talkingPair, crouchRequest, reply, selectedId, speaking, responding, ambientAllowed, covered, onRestLowered, onSelect, onEntranceComplete }: StandingSceneProps) {
   const host = useRef<HTMLDivElement>(null);
   const bubble = useRef<HTMLDivElement>(null);
   const activeId = reply?.artistId;
@@ -174,7 +188,8 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
   const entranceComplete = useRef(onEntranceComplete);
   entranceComplete.current = onEntranceComplete;
   const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [rendererFailed, setRendererFailed] = useState(false);
+  const retryRequested = useRef(false);
   const [settledRoster, setSettledRoster] = useState<string>();
   const arrived = settledRoster === guests.map(guest => guest.id).join(',');
   const roster = useRef(guests);
@@ -184,13 +199,13 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
     const element = host.current;
     if (!element) return;
     setReady(false);
-    setFailed(false);
+    setRendererFailed(false);
     setSettledRoster(undefined);
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     } catch {
-      setFailed(true);
+      setRendererFailed(true);
       return;
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -247,6 +262,7 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
     let lineup: Array<ReturnType<typeof standingLineup>[number] & { z: number }> = [];
     let layoutKey: string | undefined;
     let pendingKey: string | undefined;
+    let retrying = false;
     const moves = new Map<string, Move>();
     const loading = new Set<string>();
     const failedLoads = new Set<string>();
@@ -397,7 +413,13 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
           entranceComplete.current?.();
         }
       }
-      if (key === layoutKey || !announcedArrival) return;
+      if (!announcedArrival) return;
+      if (retryRequested.current) {
+        retryRequested.current = false;
+        retrying = failedLoads.size > 0;
+        failedLoads.clear();
+      }
+      if (key === layoutKey && !retrying) return;
       for (const id of ids) if (!actors.has(id) && !loading.has(id) && !failedLoads.has(id)) loadActor(id);
       if (ids.some(id => loading.has(id))) {
         setReady(false);
@@ -405,9 +427,10 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
       }
       const initial = layoutKey === undefined;
       layoutKey = key;
+      retrying = false;
       lineup = standingLineup(ids.filter(id => actors.has(id))).map(mark => ({ ...mark, z: floorDepth }));
       setReady(true);
-      setFailed(ids.some(id => failedLoads.has(id)));
+      onLoadFailures(ids.filter(id => failedLoads.has(id)));
       entranceAt = now;
       phaseSeconds = 0;
       announcedArrival = false;
@@ -424,12 +447,19 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
         const actor = actors.get(id)!;
         const firstTime = !actor.root.visible;
         const fromLeft = index < lineup.length / 2;
-        const startYaw = firstTime ? (fromLeft ? Math.PI / 2 : -Math.PI / 2) : actor.root.rotation.y;
-        const startX = firstTime ? (fromLeft ? -5.6 : 5.6) : actor.root.position.x;
+        const monetWalk = id === 'monet' && firstTime ? actor.actions.Walk?.getClip() : undefined;
+        const monetLateralOffset = fromLeft ? -.68 : .68;
+        const monetDepthOffset = Math.sqrt((monetStrideLength * actor.root.scale.x * monetEntryCycles) ** 2 - monetLateralOffset ** 2);
+        const monetEntry = monetWalk && {
+          walkSeconds: monetWalk.duration * monetEntryCycles,
+          heading: Math.atan2(-monetLateralOffset, monetDepthOffset),
+        };
+        const startYaw = monetEntry?.heading ?? (firstTime ? (fromLeft ? Math.PI / 2 : -Math.PI / 2) : actor.root.rotation.y);
+        const startX = monetEntry ? x + monetLateralOffset : firstTime ? (fromLeft ? -5.6 : 5.6) : actor.root.position.x;
         const arrival = firstTime && !!actor.arrival;
         // Enter behind the row when a newcomer has an interior mark.
-        const enterBehind = firstTime && !arrival && index > 0 && index < lineup.length - 1;
-        const startZ = firstTime ? (enterBehind ? rearEntranceDepth : z) : actor.root.position.z;
+        const enterBehind = firstTime && !arrival && !monetEntry && index > 0 && index < lineup.length - 1;
+        const startZ = monetEntry ? z - monetDepthOffset : firstTime ? (enterBehind ? rearEntranceDepth : z) : actor.root.position.z;
         const entrancePath = enterBehind ? new THREE.CubicBezierCurve3(
           new THREE.Vector3(startX, 0, startZ),
           new THREE.Vector3((startX + x) / 2, 0, startZ),
@@ -442,7 +472,7 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
           name: actor.arrival ? 'Step' as const : 'Walk' as const,
           strides: distance < .55 ? .5 : 1,
         } : undefined;
-        moves.set(id, { startX, startZ, startYaw, initial: firstTime && initial && !arrival, entrancePath, step, arrival });
+        moves.set(id, { startX, startZ, startYaw, initial: firstTime && initial && !arrival && !monetEntry, entrancePath, monetEntry, step, arrival });
         actor.root.visible = true;
         actor.root.position.y = 0;
         actor.root.position.z = startZ;
@@ -457,7 +487,10 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
           actor.root.rotation.y = startYaw;
           changeAction(actor, 'Walk');
           actor.gesturePhase = initial && (id === 'dali' || id === 'vincent') ? 'walk' : 'idle';
-          phaseSeconds = Math.max(phaseSeconds, initialWalkSeconds + initialTurnSeconds);
+          if (monetEntry) actor.actions.Walk.paused = true;
+          phaseSeconds = Math.max(phaseSeconds, monetEntry
+            ? monetEntry.walkSeconds + monetSettleSeconds
+            : initialWalkSeconds + initialTurnSeconds);
         } else {
           actor.crouch = null;
           if (actor.gesturePhase !== 'idle') {
@@ -520,6 +553,19 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
           actor.mixer.update(0);
           if (hasArrived && !actor.headPose) actor.headPose = actor.head.quaternion.clone();
           actor.root.rotation.y = reduceMotion ? facing : THREE.MathUtils.damp(actor.root.rotation.y, facing, 5, delta);
+        } else if (move.monetEntry) {
+          const { walkSeconds, heading } = move.monetEntry;
+          const progress = reduceMotion ? 1 : entranceWalkProgress(elapsed / walkSeconds);
+          const turn = reduceMotion ? 1 : easeInOut((elapsed - walkSeconds) / monetSettleSeconds);
+          actor.root.position.x = THREE.MathUtils.lerp(move.startX, finalX, progress);
+          actor.root.position.z = THREE.MathUtils.lerp(move.startZ, finalZ, progress);
+          actor.root.rotation.y = THREE.MathUtils.lerp(heading, facing, turn);
+          if (actor.current === 'Walk') {
+            const walk = actor.actions.Walk;
+            // Each stride advances by its authored distance, including at a slow frame rate.
+            walk.time = ((progress * monetEntryCycles) % 1) * walk.getClip().duration;
+            if (progress >= 1) settle(actor, id);
+          }
         } else if (move.step) {
           const { walk, name, strides } = move.step;
           const turn = easeInOut(elapsed / (stepTurn + .10));
@@ -675,6 +721,7 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
         moves.forEach(move => {
           move.arrival = false;
           move.step = undefined;
+          move.monetEntry = undefined;
         });
         announcedArrival = true;
         if (actors.has(tiredAside.artistId)) restTimer.current ??= restClock(performance.now());
@@ -699,13 +746,22 @@ export function StandingScene({ guests, talkingPair, crouchRequest, reply, selec
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [crouchRequest]);
+  }, [crouchRequest, onLoadFailures]);
 
+  const unavailable = guests.filter(guest => failedIds.includes(guest.id));
+  const failedNames = unavailable.map(displayName).join(t('、', ', '));
   return <div className={`standing-scene ${arrived ? 'is-arrived' : 'is-entering'}`}>
     <div className="standing-canvas" ref={host} aria-hidden="true" />
-    {(!ready || failed) && <div className="standing-loading" role="status">{failed ? t("有一位来宾还在门外。", "An artist could not be loaded.") : t("他们正走进来…", "The artists are arriving…")}</div>}
+    {rendererFailed ? <div className="standing-loading">
+      <span role="status">{t('舞台未能载入。', 'The studio couldn’t load.')}</span>
+      <button type="button" onClick={() => window.location.reload()}>{t('重新载入', 'Reload studio')}</button>
+    </div> : !ready ? <div className="standing-loading" role="status">{t('正在载入来宾…', 'Loading the artists…')}</div>
+      : unavailable.length > 0 && <div className="standing-loading">
+        <span role="status">{t(`${failedNames}未能载入。`, `Couldn’t load ${failedNames}.`)}</span>
+        <button type="button" onClick={() => { retryRequested.current = true; setReady(false); }}>{t('重试载入', 'Retry loading')}</button>
+      </div>}
     <div className="standing-hit-layer" inert={!arrived}>
-      {guests.filter(guest => standingModels[guest.id]).map(guest => <button
+      {guests.filter(guest => standingModels[guest.id] && !failedIds.includes(guest.id)).map(guest => <button
         key={guest.id}
         ref={node => { hitTargets.current[guest.id] = node; }}
         className={`standing-artist-hit ${selectedId === guest.id ? 'is-selected' : ''}`}
